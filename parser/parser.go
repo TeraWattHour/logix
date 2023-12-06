@@ -97,6 +97,10 @@ func (p *Parser) Parse() (stmt ast.Statement, err error) {
 		p.errors = append(p.errors, "unexpected token "+p.currentToken.Literal)
 	}
 
+	if p.nextToken != nil {
+		p.errors = append(p.errors, "unexpected token "+p.nextToken.Literal)
+	}
+
 	if len(p.errors) > 0 {
 		return nil, NewParsingError(p.errors)
 	}
@@ -244,7 +248,7 @@ func (p *Parser) expectNext(kind tokenizer.TokenKind) bool {
 		p.advanceToken()
 		return true
 	}
-	// handle error
+	p.errors = append(p.errors, "expected "+string(kind)+", got "+string(p.nextToken.Kind))
 	return false
 }
 
