@@ -80,14 +80,6 @@ func (e *Evaluator) applyRules(expr ast.Expression) ast.Expression {
 	return expr
 }
 
-func (e *Evaluator) simplifyInfixExpression(left ast.Expression, operator string, right ast.Expression) ast.Expression {
-	return nil
-}
-
-func (e *Evaluator) simplifyPrefixExpression(operator string, right ast.Expression) ast.Expression {
-	return nil
-}
-
 func evaluateExpression(input map[string]bool, expression ast.Expression) bool {
 	switch expr := expression.(type) {
 	case *ast.InfixExpression:
