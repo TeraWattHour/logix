@@ -40,6 +40,38 @@ func IdempotenceRule(expression ast.Expression) (bool, ast.Expression) {
 	return true, &ast.Identifier{Value: expr.Left.Literal()}
 }
 
+func BiconditionalRule(expression ast.Expression) (bool, ast.Expression) {
+	if expression.Type() != "infix" {
+		return false, expression
+	}
+	expr := expression.(*ast.InfixExpression)
+	if expr.Action != "<->" {
+		return false, expression
+	}
+
+	// weak check
+	if expr.Left.Literal() == expr.Right.Literal() {
+		return true, &ast.Boolean{Value: true}
+	}
+
+	return true, &ast.InfixExpression{
+		Op:     "*",
+		Action: "and",
+		Left: &ast.InfixExpression{
+			Op:     "->",
+			Action: "->",
+			Left:   expr.Left,
+			Right:  expr.Right,
+		},
+		Right: &ast.InfixExpression{
+			Op:     "->",
+			Action: "->",
+			Left:   expr.Right,
+			Right:  expr.Left,
+		},
+	}
+}
+
 // NegatedAlternativeRule
 // a + !a = 1
 func NegatedAlternativeRule(expression ast.Expression) (bool, ast.Expression) {
@@ -61,6 +93,7 @@ func NegatedAlternativeRule(expression ast.Expression) (bool, ast.Expression) {
 }
 
 func negatedAlternativeRule(left ast.Expression, right ast.Expression) (bool, ast.Expression) {
+	fmt.Println(left.Literal(), right.Literal())
 	if left.Type() == "identifier" && right.Type() == "prefix" {
 		if left.Literal() == right.Literal()[1:] {
 			return true, &ast.Boolean{Value: true}
@@ -87,9 +120,8 @@ func negatedAlternativeRule(left ast.Expression, right ast.Expression) (bool, as
 		if expr.Action == "or" {
 			if matched, _ := negatedAlternativeRule(left, expr.Left); matched {
 				return true, &ast.Boolean{Value: true}
-
 			}
-			if matched, _ := negatedAlternativeRule(expr.Right, right); matched {
+			if matched, _ := negatedAlternativeRule(left, expr.Right); matched {
 				return true, &ast.Boolean{Value: true}
 			}
 		}
@@ -184,7 +216,7 @@ func duplicateAlternativeRule(left ast.Expression, right ast.Expression) (bool, 
 					Right:  &ast.Boolean{Value: false},
 				}
 			}
-			if matched, expr := duplicateAlternativeRule(expr.Right, right); matched {
+			if matched, expr := duplicateAlternativeRule(left, expr.Right); matched {
 				return true, &ast.InfixExpression{
 					Op:     "+",
 					Action: "or",

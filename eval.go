@@ -25,6 +25,7 @@ func NewEvaluator() *Evaluator {
 	e.registerSimplificationRule(DeMorganRule)
 	e.registerSimplificationRule(DoubleNegationRule)
 	e.registerSimplificationRule(DuplicateAlternativeRule)
+	e.registerSimplificationRule(BiconditionalRule)
 
 	return e
 }
@@ -45,12 +46,13 @@ func (e *Evaluator) evaluate(statement ast.Statement) string {
 }
 
 func (e *Evaluator) Simplify(expression ast.Expression) ast.Expression {
+	was := make([]string, 0)
 	for {
-		previous := expression.Literal()
 		expression = e.simplify(expression)
-		if previous == expression.Literal() {
+		if contains(was, expression.Literal()) {
 			break
 		}
+		was = append(was, expression.Literal())
 	}
 	return expression
 }
